@@ -42,6 +42,7 @@ cpu_intrpt_restore:
  *     void cpu_task_switch(void);
  ******************************************************************************/
 
+/*
 .global cpu_task_switch
 .type cpu_task_switch, %function
 cpu_task_switch:
@@ -49,18 +50,18 @@ cpu_task_switch:
     lb     a0, (a0)
     beqz   a0, __task_switch
 
-    la     a0, pxCurrentTCB
-    la     a1, g_ReadyTasksLists
+    la     a0, new_task
+    la     a1, 0
     lw     a2, (a1)
     sw     a2, (a0)
 
     ret
-
+*/
 .global cpu_intrpt_switch
 .type cpu_intrpt_switch, %function
 cpu_intrpt_switch:
-    la     a0, pxCurrentTCB
-    la     a1, g_ReadyTasksLists
+    la     a0, new_task
+    la     a1, 0
     lw     a2, (a1)
     sw     a2, (a0)
 
@@ -68,11 +69,11 @@ cpu_intrpt_switch:
 
 /******************************************************************************
  * Functions:
- *     void cpu_first_task_start(void);
+ *     void start_schedule(void);
  ******************************************************************************/
-.global cpu_first_task_start
-.type cpu_first_task_start, %function
-cpu_first_task_start:
+.global start_schedule
+.type start_schedule, %function
+start_schedule:
     j       __task_switch_nosave
 
 /******************************************************************************
@@ -102,13 +103,13 @@ __task_switch:
 
     sw      ra, 56(sp)
 
-    la      a1, pxCurrentTCB
+    la      a1, new_task
     lw      a1, (a1)
     sw      sp, (a1)
 
 __task_switch_nosave:
-    la      a0, g_ReadyTasksLists
-    la      a1, pxCurrentTCB
+    la      a0, 0
+    la      a1, new_task
     lw      a2, (a0)
     sw      a2, (a1)
 
@@ -168,22 +169,23 @@ Default_IRQHandler:
     csrr    t0, mepc
     sw      t0, 56(sp)
 
-    la      a0, pxCurrentTCB
+    la      a0, new_task
     lw      a0, (a0)
     sw      sp, (a0)
-
+/* XXXX
     la      sp, g_top_irqstack
 
     csrr    a0, mcause
     andi    a0, a0, 0x3FF
     slli    a0, a0, 2
-
+   
     la      a1, g_irqvector
     add     a1, a1, a0
     lw      a2, (a1)
     jalr    a2
 
-    la      a0, pxCurrentTCB
+*/
+    la      a0, new_task
     lw      a0, (a0)
     lw      sp, (a0)
 

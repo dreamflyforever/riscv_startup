@@ -110,17 +110,27 @@ static int sifive_uart_putchar(int ch)
 
 __attribute__((noreturn)) void _main()
 {
-	sifive_uart_init();
-	sifive_test_init();
-	sifive_uart_putchar('h');
-	sifive_uart_putchar('i');
-	sifive_test_poweroff();
 	main();
 	__builtin_unreachable();
 }
 
+#include "support.c"
 int main()
 {
+	sifive_uart_init();
+	sifive_test_init();
+	sifive_uart_putchar('h');
+	sifive_uart_putchar('e');
+	//sifive_test_poweroff();
+	/*Create idle task */
+	task_create(&idle_tcb, (U8 *) "idle_task", idle_task, NULL, idle_stack,
+		    IDLE_STACK_SIZE, 31, 1);
+
+	sifive_uart_putchar('l');
+	new_task = &idle_tcb;
+	sifive_uart_putchar('r');
+	start_schedule();
+	sifive_uart_putchar('e');
 	return 0;
 }
 
