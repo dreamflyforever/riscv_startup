@@ -117,11 +117,11 @@ __attribute__((noreturn)) void _main()
 #include "support.c"
 int main()
 {
+	int i = 1 ;
 	sifive_uart_init();
 	sifive_test_init();
 	sifive_uart_putchar('h');
 	sifive_uart_putchar('e');
-	//sifive_test_poweroff();
 	/*Create idle task */
 	task_create(&idle_tcb, (U8 *) "idle_task", idle_task, NULL, idle_stack,
 		    IDLE_STACK_SIZE, 31, 1);
@@ -131,6 +131,7 @@ int main()
 	sifive_uart_putchar('r');
 	start_schedule();
 	sifive_uart_putchar('e');
+	sifive_test_poweroff();
 	return 0;
 }
 

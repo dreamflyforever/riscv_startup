@@ -18,33 +18,69 @@ typedef struct TCB_STR {
 	//BOOL state;
 } TCB;
 
+typedef struct cpu_context_st {
+    uint32_t          mepc;
+    uint32_t          mstatus;
+    union { uint32_t  x1,  ra; };
+    union { uint32_t  x3,  gp; };
+    union { uint32_t  x4,  tp; };
+    union { uint32_t  x5,  t0; };
+    union { uint32_t  x6,  t1; };
+    union { uint32_t  x7,  t2; };
+    union { uint32_t  x8,  s0, fp; };
+    union { uint32_t  x9,  s1; };
+    union { uint32_t x10,  a0; };
+    union { uint32_t x11,  a1; };
+    union { uint32_t x12,  a2; };
+    union { uint32_t x13,  a3; };
+    union { uint32_t x14,  a4; };
+    union { uint32_t x15,  a5; };
+    union { uint32_t x16,  a6; };
+    union { uint32_t x17,  a7; };
+    union { uint32_t x18,  s2; };
+    union { uint32_t x19,  s3; };
+    union { uint32_t x20,  s4; };
+    union { uint32_t x21,  s5; };
+    union { uint32_t x22,  s6; };
+    union { uint32_t x23,  s7; };
+    union { uint32_t x24,  s8; };
+    union { uint32_t x25,  s9; };
+    union { uint32_t x26, s10; };
+    union { uint32_t x27, s11; };
+    union { uint32_t x28,  t3; };
+    union { uint32_t x29,  t4; };
+    union { uint32_t x30,  t5; };
+    union { uint32_t x31,  t6; };
+} cpu_context_t;
+
 void *stack_init(STACK *stack_base, uint32_t stack_size, TASK_ENTRY entry, void *arg, void *task_exit)
 {
     STACK *stk;
-    register int *gp asm("x3");
-    uint32_t temp = (uint32_t)(stack_base + stack_size);
+    cpu_context_t *regs = 0;
 
-    temp &= 0xFFFFFFFCUL;
+    stk = (uint32_t *)&stack_base[stack_size];
+    stk = (uint32_t *)((uint32_t)(stk) & 0xFFFFFFFC);
 
-    stk = (uint32_t *)temp;
+    stk  -= (sizeof(cpu_context_t)/sizeof(uint32_t));
 
-    *(--stk) = (uint32_t)entry;                   /* PC            */
-    *(--stk) = (uint32_t)0xbbbbbbbbL;             /* X15           */
-    *(--stk) = (uint32_t)0xaaaaaaaaL;             /* X14           */
-    *(--stk) = (uint32_t)0x99999999L;             /* X13           */
-    *(--stk) = (uint32_t)0x88888888L;             /* X12           */
-    *(--stk) = (uint32_t)0x77777777L;             /* X11           */
-    *(--stk) = (uint32_t)arg;                     /* X10           */
-    *(--stk) = (uint32_t)0x66666666L;             /* X9            */
-    *(--stk) = (uint32_t)0x55555555L;             /* X8            */
-    *(--stk) = (uint32_t)0x44444444L;             /* X7            */
-    *(--stk) = (uint32_t)0x33333333L;             /* X6            */
-    *(--stk) = (uint32_t)0x22222222L;             /* X5            */
-    *(--stk) = (uint32_t)0x11111111L;             /* X4            */
-    *(--stk) = (uint32_t)gp;                      /* X3            */
-    *(--stk) = (uint32_t)task_exit;    		  /* X1            */
+    regs = (cpu_context_t*) stk;
 
-    return stk;	
+    for(int i=1; i<(sizeof(cpu_context_t)/sizeof(uint32_t)); i++) {
+        *(stk + i) = 0xACEADD00 | ((i / 10) << 4) | (i % 10);
+    }
+
+    //uint32_t gp = 0;
+    volatile uint32_t gp;
+    asm("mv %0, gp":"=r"(gp));
+    //__ASM__ __VOLATILE__ ("mv %0, gp":"=r"(gp));
+
+    regs->gp        = (uint32_t)gp;           // global pointer
+    regs->a0        = (uint32_t)arg;          // argument
+    regs->ra        = (uint32_t)task_exit;         // return address
+    regs->mstatus   = (uint32_t)0x00001880;   // return to machine mode and enable interrupt
+    regs->mepc      = (uint32_t)entry;        // task entry
+
+    return (STACK*)stk;
 }
 
 void *_memset(void *dest, int c, int n)
