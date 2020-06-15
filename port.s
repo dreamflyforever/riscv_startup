@@ -354,17 +354,15 @@ port_schedule:
 
 
 switch_task:
-/*
-    lw      t0,  old_task
-    lw      t1,  new_task
-    sw      sp, (t0)
-*/
-    lw      t0, old_task
-    lw      t1, new_task
+    la      t0, old_task        
+    la      t1, new_task       
+    
+    lw      t2, (t0)
+    sw      sp, (t2)
 
-    sw      sp, (t0)
+    lw      t1, (t1)           
+    sw      t1, (t0)
 
-    /* load new task sp*/
     lw      sp, (t1)
 
 restore_context:

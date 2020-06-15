@@ -138,8 +138,8 @@ void idle_task(void *arg)
 		/*do low power action or low priority thing, then schedule*/
 		//schedule();
 		sifive_uart_putchar('o');
-		old_task = &idle_task;
-		new_task = &test_stack;
+		old_task = &idle_tcb;
+		new_task = &test_tcb;
 		port_schedule();
 	}
 }
@@ -152,8 +152,8 @@ void test_task(void *arg)
 		//schedule();
 		sifive_uart_putchar('t');
 
-		old_task = &test_stack;
-		new_task = &idle_task;
+		old_task = &test_tcb;
+		new_task = &idle_tcb;
 		port_schedule();
 	}
 }
