@@ -22,6 +22,10 @@
  *     size_t cpu_intrpt_save(void);
  *     void   cpu_intrpt_restore(size_t psr);
  ******************************************************************************/
+.equ    MSTATUS_MIE,        0x00000008
+.equ    MSTATUS_MPP,        0x00001800
+.extern old_task
+.extern new_task
 
 .global cpu_intrpt_save
 .type cpu_intrpt_save, %function
@@ -177,7 +181,7 @@ __task_switch:
 
 __task_switch_nosave:
     lw      t0, new_task
-    lw      sp, (t0)                /*sp = k_curr_task->sp*/
+    lw      sp, (t0)                /*sp = new_task->sp*/
 
     lw      t0,   __reg_mepc_OFFSET(sp)
     csrw    mepc, t0
@@ -305,3 +309,102 @@ Default_IRQHandler:
     addi    sp, sp, 60
     mret
 
+.global port_schedule
+.align 2
+.type port_schedule, %function
+port_schedule:
+    addi   sp, sp, -128
+    sw x1, __reg_x1_OFFSET(sp)
+    sw x3, __reg_x3_OFFSET(sp)
+    sw x4, __reg_x4_OFFSET(sp)
+    sw x5, __reg_x5_OFFSET(sp)
+    sw x6, __reg_x6_OFFSET(sp)
+    sw x7, __reg_x7_OFFSET(sp)
+    sw x8, __reg_x8_OFFSET(sp)
+    sw x9, __reg_x9_OFFSET(sp)
+    sw x10, __reg_x10_OFFSET(sp)
+    sw x11, __reg_x11_OFFSET(sp)
+    sw x12, __reg_x12_OFFSET(sp)
+    sw x13, __reg_x13_OFFSET(sp)
+    sw x14, __reg_x14_OFFSET(sp)
+    sw x15, __reg_x15_OFFSET(sp)
+    sw x16, __reg_x16_OFFSET(sp)
+    sw x17, __reg_x17_OFFSET(sp)
+    sw x18, __reg_x18_OFFSET(sp)
+    sw x19, __reg_x19_OFFSET(sp)
+    sw x20, __reg_x20_OFFSET(sp)
+    sw x21, __reg_x21_OFFSET(sp)
+    sw x22, __reg_x22_OFFSET(sp)
+    sw x23, __reg_x23_OFFSET(sp)
+    sw x24, __reg_x24_OFFSET(sp)
+    sw x25, __reg_x25_OFFSET(sp)
+    sw x26, __reg_x26_OFFSET(sp)
+    sw x27, __reg_x27_OFFSET(sp)
+    sw x28, __reg_x28_OFFSET(sp)
+    sw x29, __reg_x29_OFFSET(sp)
+    sw x30, __reg_x30_OFFSET(sp)
+    sw x31, __reg_x31_OFFSET(sp)
+
+    sw     ra,  __reg_mepc_OFFSET(sp)
+
+    csrr   t0,  mstatus
+    li     t1,  MSTATUS_MPP
+    or     t0,  t0, t1
+    sw     t0,  __reg_mstatus_OFFSET(sp)
+
+
+switch_task:
+/*
+    lw      t0,  old_task
+    lw      t1,  new_task
+    sw      sp, (t0)
+*/
+    lw      t0, old_task
+    lw      t1, new_task
+
+    sw      sp, (t0)
+
+    /* load new task sp*/
+    lw      sp, (t1)
+
+restore_context:
+    /* restore context*/
+    lw      t0,   __reg_mepc_OFFSET(sp)
+    csrw    mepc, t0
+
+    lw      t0,   __reg_mstatus_OFFSET(sp)
+    csrw    mstatus, t0
+
+    lw x1, __reg_x1_OFFSET(sp)
+    lw x3, __reg_x3_OFFSET(sp)
+    lw x4, __reg_x4_OFFSET(sp)
+    lw x5, __reg_x5_OFFSET(sp)
+    lw x6, __reg_x6_OFFSET(sp)
+    lw x7, __reg_x7_OFFSET(sp)
+    lw x8, __reg_x8_OFFSET(sp)
+    lw x9, __reg_x9_OFFSET(sp)
+    lw x10, __reg_x10_OFFSET(sp)
+    lw x11, __reg_x11_OFFSET(sp)
+    lw x12, __reg_x12_OFFSET(sp)
+    lw x13, __reg_x13_OFFSET(sp)
+    lw x14, __reg_x14_OFFSET(sp)
+    lw x15, __reg_x15_OFFSET(sp)
+    lw x16, __reg_x16_OFFSET(sp)
+    lw x17, __reg_x17_OFFSET(sp)
+    lw x18, __reg_x18_OFFSET(sp)
+    lw x19, __reg_x19_OFFSET(sp)
+    lw x20, __reg_x20_OFFSET(sp)
+    lw x21, __reg_x21_OFFSET(sp)
+    lw x22, __reg_x22_OFFSET(sp)
+    lw x23, __reg_x23_OFFSET(sp)
+    lw x24, __reg_x24_OFFSET(sp)
+    lw x25, __reg_x25_OFFSET(sp)
+    lw x26, __reg_x26_OFFSET(sp)
+    lw x27, __reg_x27_OFFSET(sp)
+    lw x28, __reg_x28_OFFSET(sp)
+    lw x29, __reg_x29_OFFSET(sp)
+    lw x30, __reg_x30_OFFSET(sp)
+    lw x31, __reg_x31_OFFSET(sp)
+    addi    sp, sp, 128
+
+    mret

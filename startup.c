@@ -122,7 +122,7 @@ int main()
 	sifive_test_init();
 	sifive_uart_putchar('h');
 	sifive_uart_putchar('e');
-#if 1
+#if 0
 	/*Create idle task */
 	task_create(&idle_tcb, (U8 *) "idle_task", idle_task, NULL, idle_stack,
 		    IDLE_STACK_SIZE, 31, 1);
@@ -133,7 +133,8 @@ int main()
 	start_schedule();
 	sifive_uart_putchar('e');
 	sifive_test_poweroff();
-#endif	
+#endif
+	test_task_schedule();
 	return 0;
 }
 

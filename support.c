@@ -100,17 +100,6 @@ void task_exit()
 	sifive_uart_putchar('o');
 }
 
-void task_ilde()
-{
-	sifive_uart_init();
-	sifive_test_init();
-	sifive_uart_putchar('w');
-	sifive_uart_putchar('o');
-	sifive_test_poweroff();
-
-	;
-}
-
 uint32_t task_create(TCB *tcb, U8 *name, TASK_ENTRY fun, void *arg, STACK *stack,
 	       U32 stack_size, U8 prio, BOOL state)
 {
@@ -136,8 +125,11 @@ TCB *old_task;
 TCB idle_tcb;
 #define IDLE_STACK_SIZE 1024
 U32 idle_stack[IDLE_STACK_SIZE];
+TCB test_tcb;
+U32 test_stack[IDLE_STACK_SIZE];
 
 extern void start_schedule(void);
+extern void port_schedule(void);
 
 /*Idle task*/
 void idle_task(void *arg)
@@ -146,5 +138,36 @@ void idle_task(void *arg)
 		/*do low power action or low priority thing, then schedule*/
 		//schedule();
 		sifive_uart_putchar('o');
+		old_task = &idle_task;
+		new_task = &test_stack;
+		port_schedule();
 	}
+}
+
+/*task_test*/
+void test_task(void *arg)
+{
+	for (;;) {
+		/*do low power action or low priority thing, then schedule*/
+		//schedule();
+		sifive_uart_putchar('t');
+
+		old_task = &test_stack;
+		new_task = &idle_task;
+		port_schedule();
+	}
+}
+
+int test_task_schedule()
+{
+	/*create idle task */
+	task_create(&idle_tcb, (U8 *) "idle_task", idle_task, NULL, idle_stack,
+		    IDLE_STACK_SIZE, 31, 1);
+	
+	/*create test task */
+	task_create(&test_tcb, (U8 *) "test_task", test_task, NULL, test_stack,
+		    IDLE_STACK_SIZE, 31, 1);
+
+	new_task = &idle_tcb;
+	start_schedule();
 }
