@@ -108,8 +108,18 @@ static int sifive_uart_putchar(int ch)
 	return uart[UART_REG_TXFIFO] = ch & 0xff;
 }
 
+void *memset(void *dest, int c, int n)
+{
+	char *p = dest;
+	while (n-- > 0) {
+		*(char*)dest++ = c;
+	}
+	return p;
+}
+
 __attribute__((noreturn)) void _main()
 {
+	memset(&_bss_start, 0, &_bss_end - &_bss_start);
 	main();
 	__builtin_unreachable();
 }
