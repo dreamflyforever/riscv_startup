@@ -102,7 +102,7 @@ static void sifive_uart_init()
 	uart[UART_REG_IE] = 0;
 }
 
-static int sifive_uart_putchar(int ch)
+int sifive_uart_putchar(int ch)
 {
 	while (uart[UART_REG_TXFIFO] < 0);
 	return uart[UART_REG_TXFIFO] = ch & 0xff;

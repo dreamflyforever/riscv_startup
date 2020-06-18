@@ -130,6 +130,7 @@ U32 test_stack[IDLE_STACK_SIZE];
 
 extern void start_schedule(void);
 extern void port_schedule(void);
+extern void system_timer(void);
 
 /*Idle task*/
 void idle_task(void *arg)
@@ -169,5 +170,22 @@ int test_task_schedule()
 		    IDLE_STACK_SIZE, 31, 1);
 
 	new_task = &idle_tcb;
+	system_timer();
+	while (1);
 	start_schedule();
+}
+
+void test_timer()
+{
+	system_timer();
+}
+
+void pass_msg()
+{
+	sifive_uart_putchar('p');
+}
+
+void fail_msg()
+{
+	sifive_uart_putchar('f');
 }
